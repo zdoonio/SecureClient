@@ -3,20 +3,27 @@ package com.standard;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import com.security.DiffieHellman;
+import com.security.Rsa;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 
 public class ClientGUI extends JFrame implements ActionListener {
 	
-	private JButton bencrypt, bexit, bdecrypt, bsend;
+	private JButton bencrypt, bexit, bdecrypt, bsend, bok;
 	private JComboBox<String> securityChooser,pubkeyChooser,privkeyChooser,destiChooser;
-	private JLabel lname,ldestiUser,lpubkey,lprivkey;
+	private JLabel lname,ldestiUser,lpubkey,lprivkey,lsecu;
 	private JTextArea messageText,plainText;
 	
+	private DiffieHellman df;
+	private Rsa rsa;
+	private int flag = 0;
 	/**
 	 * 
 	 */
@@ -47,6 +54,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 		bsend.setBounds(180,250+120,150,30);
 		add(bsend);
 		bsend.addActionListener(this);
+		bok = new JButton ("OK");
+		bok.setBounds(345,50,150,50);
+		add(bok);
+		bok.addActionListener(this);
 		
 		//text field area init
 		messageText = new JTextArea("");
@@ -64,13 +75,16 @@ public class ClientGUI extends JFrame implements ActionListener {
 		lname.setBounds(200,10,150,20);
 		add(lname);
 		ldestiUser = new JLabel("Destination User");
-		ldestiUser.setBounds(40,50,150,20);
+		ldestiUser.setBounds(20,50,200,20);
 		add(ldestiUser);
-		lpubkey = new JLabel("Choose Public Key");
-		lpubkey.setBounds(20,100,150,20);
+		lsecu = new JLabel("Choose key agreement");
+		lsecu.setBounds(20,80,200,20);
+		add(lsecu);
+		lpubkey = new JLabel("Decrypted message");
+		lpubkey.setBounds(20,115,150,20);
 		add(lpubkey);
-		lprivkey = new JLabel("Choose Private Key");
-		lprivkey.setBounds(340,100,150,20);
+		lprivkey = new JLabel("Encrypted message");
+		lprivkey.setBounds(340,115,150,20);
 		add(lprivkey);
 		
 		
@@ -85,15 +99,15 @@ public class ClientGUI extends JFrame implements ActionListener {
 		
 		//CHOOSER INIT
 		securityChooser = new JComboBox<String>();
-		securityChooser.setBounds(180, 280+30, 150, 20);
+		securityChooser.setBounds(190, 80, 150, 20);
 		securityChooser.addItem("RSA");
 		securityChooser.addItem("Diffie-Helman");
-		securityChooser.addItem("Merkle Puzzel's");
+		securityChooser.addItem("Merkle's Puzzles");
 		securityChooser.addItem("TTP");
 		securityChooser.addItem("PreDistributed");
 		add(securityChooser);
 		securityChooser.addActionListener(this);
-		
+		/*
 		pubkeyChooser = new JComboBox<String>();
 		pubkeyChooser.setBounds(20,120,150,20);
 		add(pubkeyChooser);
@@ -103,9 +117,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 		privkeyChooser.setBounds(340,120,150,20);
 		add(privkeyChooser);
 		privkeyChooser.addActionListener(this);
-		
+		*/
 		destiChooser = new JComboBox<String>();
-		destiChooser.setBounds(180,50,150,20);
+		destiChooser.setBounds(190,50,150,20);
 		add(destiChooser);
 		destiChooser.addActionListener(this);
 	}
@@ -130,6 +144,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 		//System.out.println(new Date());
 			Object o = e.getSource();
 			
+			//int choose = 0;
+			
 			if(o == bencrypt ){
 		
 			
@@ -147,6 +163,72 @@ public class ClientGUI extends JFrame implements ActionListener {
 				
 				return;
 				}
+			
+			if(o == bok){
+				securityChooser.setEnabled(false);
+				//destiChooser.setEnabled(false);
+				switch(flag){
+				
+				case 0:
+					rsa = new Rsa();
+					rsa.generateKey();
+					break;
+					
+				case 1:
+					df = new DiffieHellman();
+					df.generateKeys();
+					try {
+						df.keySave("Dominik");
+					} catch (FileNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					break;
+					
+				case 2:
+				
+					break;
+				
+				case 3:
+					
+					break;
+				
+				case 4:
+					
+					break;
+					
+				
+				}
+				return;
+				}
+			
+			if(o == securityChooser){
+				String security = securityChooser.getSelectedItem().toString();
+				if(security.equals("RSA")){
+					flag = 0;
+					//System.out.println(flag);
+				}
+				else if(security.equals("Diffie-Helman")){
+					flag = 1;
+					//System.out.println(flag);
+				}
+				else if(security.equals("Merkle's Puzzles")){
+					flag = 2;
+					//System.out.println(flag);
+				}
+				else if(security.equals("TTP")){
+					flag = 3;
+					//System.out.println(flag);
+				}
+				else if(security.equals("PreDistributed")){
+					flag = 4;
+					//System.out.println(flag);
+				}
+			}
+			
+			if(o == destiChooser){
+				
+			}
 			
 			if(o == bexit){
 				System.exit(0);
