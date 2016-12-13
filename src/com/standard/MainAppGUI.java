@@ -13,6 +13,7 @@ public class MainAppGUI extends JFrame implements ActionListener {
 	private JPasswordField tpw;
 	private ClientGUI clientGUI;
 	private Client client;
+	private String name,ipadd;
 	
 	/**
 	 * 
@@ -98,6 +99,14 @@ public class MainAppGUI extends JFrame implements ActionListener {
 		mainWin.setVisible(true);
 
 	}
+	
+	public String getClientName(){
+		return name;
+	}
+	
+	public String getIpName(){
+		return ipadd;
+	}
 
 	public void CloseFrame() {
 		super.dispose();
@@ -112,9 +121,9 @@ public class MainAppGUI extends JFrame implements ActionListener {
 		if (o == blogin) {
 			
 			client = new Client();
-			String name = tname.getText();
+			name = tname.getText();
 	        char[] password = tpw.getPassword();
-	        String ipadd = tip.getText();
+	        ipadd = tip.getText();
 	        boolean isLoged = false;
 			try {
 				isLoged = client.Loging(password, name, ipadd);
