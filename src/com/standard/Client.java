@@ -20,7 +20,7 @@ public class Client {
 		
 
 		ServerIntf obj = (ServerIntf) Naming
-				.lookup("//127.0.0.1/ServerSecure");
+				.lookup("//192.168.0.2/ServerSecure");
 		//System.out.println("Witamy w banku, proszę się zalogować");
 		obj.Login(name, password);
 		zalogowano = obj.isLogedIn();
