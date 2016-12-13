@@ -23,6 +23,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	
 	private DiffieHellman df;
 	private Rsa rsa;
+	private Client client;
 	private int flag = 0;
 	/**
 	 * 

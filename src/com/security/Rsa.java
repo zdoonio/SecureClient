@@ -181,7 +181,7 @@ public static String sendPublicKey () throws FileNotFoundException, IOException,
       if (!areKeysPresent()) {
         // Method generates a pair of keys using the RSA algorithm and stores it
         // in their respective files
-        generateKey();
+       //generateKey();
       }
 
       final String originalText = "Text to be encrypted ";

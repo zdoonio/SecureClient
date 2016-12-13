@@ -11,7 +11,9 @@ public class MainAppGUI extends JFrame implements ActionListener {
 	private JLabel lnameapp, lname, lpw, lip, lport;
 	private JTextField tname, tip, tport;
 	private JPasswordField tpw;
-	private ClientGUI client;
+	private ClientGUI clientGUI;
+	private Client client;
+	
 	/**
 	 * 
 	 */
@@ -108,15 +110,32 @@ public class MainAppGUI extends JFrame implements ActionListener {
 		Object o = e.getSource();
 
 		if (o == blogin) {
-
+			
+			client = new Client();
+			String name = tname.getText();
+	        char[] password = tpw.getPassword();
+	        String ipadd = tip.getText();
+	        boolean isLoged = false;
 			try {
-				client = new ClientGUI();
-				client.setVisible(true);
+				isLoged = client.Loging(password, name, ipadd);
+			} catch (Exception e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			if (isLoged == true){
+			try {
+				clientGUI = new ClientGUI();
+				clientGUI.setVisible(true);
 				JOptionPane.showMessageDialog(null, "Login Successful!");
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+			}
+			
+			else JOptionPane.showMessageDialog(null, "Login Failed!");
+				
+			
 			return;
 		}
 
