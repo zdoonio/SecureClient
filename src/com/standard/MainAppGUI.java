@@ -13,7 +13,8 @@ public class MainAppGUI extends JFrame implements ActionListener {
 	private JPasswordField tpw;
 	private ClientGUI clientGUI;
 	private Client client;
-	private String name,ipadd;
+	private static String name;
+	private static String ipadd;
 	
 	/**
 	 * 
@@ -100,11 +101,11 @@ public class MainAppGUI extends JFrame implements ActionListener {
 
 	}
 	
-	public String getClientName(){
+	public static String getClientName(){
 		return name;
 	}
 	
-	public String getIpName(){
+	public static String getIpName(){
 		return ipadd;
 	}
 

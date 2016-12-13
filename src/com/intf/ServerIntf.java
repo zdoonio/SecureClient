@@ -10,9 +10,13 @@ public interface ServerIntf extends Remote {
 
 	public String getMessage2() throws RemoteException;
 	
-	public void setMessage1(String message) throws RemoteException;
+	public void sendMessage1(String message) throws RemoteException;
 	
-	public void setMessage2(String message) throws RemoteException;
+	public void sendMessage2(String message) throws RemoteException;
+
+	public void sendClientName(String name) throws RemoteException;
+	
+	public String[] getConnectedUser() throws RemoteException;
 
 	public char Login(String login, char[] password) throws RemoteException ,NoSuchAlgorithmException, InvalidKeySpecException;
 

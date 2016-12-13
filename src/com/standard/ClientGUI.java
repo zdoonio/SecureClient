@@ -12,11 +12,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 
 public class ClientGUI extends JFrame implements ActionListener {
 	
-	private JButton bencrypt, bexit, bdecrypt, bsend, bok;
+	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh;
 	private JComboBox<String> securityChooser,pubkeyChooser,privkeyChooser,destiChooser;
 	private JLabel lname,ldestiUser,lpubkey,lprivkey,lsecu;
 	private JTextArea messageText,plainText;
@@ -59,6 +60,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 		bok.setBounds(345,50,150,50);
 		add(bok);
 		bok.addActionListener(this);
+		brefresh = new JButton ("REFRESH");
+		brefresh.setBounds(345,20,150,20);
+		add(brefresh);
+		brefresh.addActionListener(this);
 		
 		//text field area init
 		messageText = new JTextArea("");
@@ -148,8 +153,24 @@ public class ClientGUI extends JFrame implements ActionListener {
 		// TODO Auto-generated method stub
 		//System.out.println(new Date());
 			Object o = e.getSource();
-			
+			String[] t = new String[10];
 			//int choose = 0;
+			if(o == brefresh ){
+			String ipadd = MainAppGUI.getIpName();
+			client = new Client();
+			try {
+				t = client.Refresh(ipadd);
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			for (int i = 0; i < t.length; ++i)
+			{
+				destiChooser.addItem(t[i]);
+			}
+			return;
+			}
+			
 			
 			if(o == bencrypt ){
 		
@@ -164,7 +185,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 				}
 			
 			if(o == bsend ){
-				
+				//String name = MainAppGUI.getClientName();
+				//String ipadd = MainAppGUI.getIpName();
+				//JOptionPane.showMessageDialog(null, name+":"+ipadd);
 				
 				return;
 				}
