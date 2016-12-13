@@ -136,6 +136,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 	public void CloseFrame(){
 	    super.dispose();
 	}
+        
+        public void nothing() {
+        
+        }
 	
 	
 
