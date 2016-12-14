@@ -1,9 +1,12 @@
 package com.standard;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.rmi.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.*;
 
 import com.clients.ClientDH;
@@ -85,7 +88,7 @@ public class Client {
 		obj.sendTargetName(name);
 	}
 	
-	public void Init(int choose, String name){
+	public void Init(int choose, String name) throws NoSuchAlgorithmException, NoSuchProviderException, IOException{
 		switch (choose) {
 
 		case 0:

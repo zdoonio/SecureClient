@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 
 public class ClientGUI extends JFrame implements ActionListener {
@@ -141,7 +143,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		destiChooser.addActionListener(this);
 	}
 
-	public static void main(String[] args) throws IOException, NotBoundException {
+	public static void main(String[] args) throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchProviderException {
 		// WINDOW OPEN
 		ClientGUI mainWin = new ClientGUI();
 		mainWin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -167,7 +169,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	}
 	
-	public static void Agreement() throws MalformedURLException, RemoteException, NotBoundException{
+	public static void Agreement() throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException{
 		String ipadd = MainAppGUI.getIpName();
 		targetName = null;
 		int localFlag = 0;
@@ -186,7 +188,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		
 	}
 	
-	public static void SetKeyAgreement(int flag) throws MalformedURLException, RemoteException, NotBoundException{
+	public static void SetKeyAgreement(int flag) throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException{
 		securityChooser.setEnabled(false);
 		destiChooser.setEnabled(false);
 		switch (flag) {
@@ -301,6 +303,15 @@ public class ClientGUI extends JFrame implements ActionListener {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NoSuchAlgorithmException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NoSuchProviderException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}

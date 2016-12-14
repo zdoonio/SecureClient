@@ -1,6 +1,7 @@
 package com.intf;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.ServerNotActiveException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public interface ServerIntf extends Remote {
 	
 	public ArrayList<String> getConnectedUser() throws RemoteException;
 	
-	public String getTargetName() throws RemoteException;
+	public String getTargetName() throws RemoteException, ServerNotActiveException;
 	
 	public int getFlagState() throws RemoteException;
 
