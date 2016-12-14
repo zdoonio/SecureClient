@@ -35,9 +35,9 @@ public class DiffieHellman implements CBCEncryptable {
     private DHPrivateKey privateKey;
     
     private DHPublicKey receivedPublicKey;
-    
+
     private byte[] secretKey;
-    
+
     private SecureRandom random;
     
     /**
@@ -50,6 +50,9 @@ public class DiffieHellman implements CBCEncryptable {
      */
     public static final String CIPHER_ALGORITHM = EnabledCiphers.AES_CBC;
     
+    /**
+     * Generate pair of keys - the private and the public.
+     */
     public void generateKeys() {
         try {
             final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DH");
@@ -68,9 +71,8 @@ public class DiffieHellman implements CBCEncryptable {
      * TODO: Receive a serialized key.
      * @param publicKey 
      */
-    public void receivePublicKey(String name) {
+    public void receivePublicKey(DHPublicKey publicKey) {
         receivedPublicKey = publicKey;
-        String location = "keysdh/pubkeydh"+name+".key";
     }
     
     /**
@@ -160,12 +162,17 @@ public class DiffieHellman implements CBCEncryptable {
     
     public void keySave(String name) throws FileNotFoundException{
     	
-    	//int blocksize = IvGenerator.AES_BLOCK_SIZE;
-    	//DiffieHellman df = new DiffieHellman();
-    	//df.generateKeys();
     	PrintWriter pubKey = new PrintWriter("keysdh/pubkeydh"+name+".key");
         pubKey.println(publicKey);
         pubKey.close();
+    }
+    
+    /**
+     * Get the public key of the communication.
+     * @return the DHPublicKey instance. 
+     */
+    public DHPublicKey getPublicKey() {
+        return publicKey;
     }
 
     
