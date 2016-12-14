@@ -7,9 +7,25 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.interfaces.DHPublicKey;
@@ -28,37 +44,58 @@ public class ClientDH implements DecEncClient {
     
     private final DiffieHellman dh;
     
-    public ClientDH(String name) {
+    private PublicKey myPublicKey;
+    
+    private PrivateKey myPrivateKey;
+    
+    public final String PUBLIC_KEY_FILE;
+    
+    public final String SIGNATURE_FILE;
+    
+    public ClientDH(String name) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
         this.name = name;
         dh = new DiffieHellman();
         dh.generateKeys();
-    }
-    
-    public void receivePublicKey(byte[] bytes) throws IOException, ClassNotFoundException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-        BufferedInputStream bis = new BufferedInputStream(bais);
-        try (ObjectInputStream ois = new ObjectInputStream(bis)) {
-            Object obj = ois.readObject();
-            if( !(obj instanceof DHPublicKey) ) throw new ClassNotFoundException();
-            else {
-                dh.receivePublicKey((DHPublicKey) obj); 
-                dh.generateSharedSecret();
-            }
-            ois.close();
-        } 
+        PUBLIC_KEY_FILE = name + "DH" + ".suepk";
+        SIGNATURE_FILE = name + "DH" + ".sig";
+        initSigning();
         
     }
     
-    public byte[] writePublicKey() throws IOException {
-        byte[] myBytes;
+    public void receivePublicKey(ByteArrayOutputStream boas, String signatureFile, String dsaKeyFile) throws 
+            IOException, ClassNotFoundException, FileNotFoundException, NoSuchAlgorithmException, 
+            NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        
+        if(verifyPublicKeySignature(boas, signatureFile, dsaKeyFile)) {
+            ByteArrayInputStream bais = new ByteArrayInputStream(boas.toByteArray());
+            BufferedInputStream bis = new BufferedInputStream(bais);
+            try (ObjectInputStream ois = new ObjectInputStream(bis)) {
+                Object obj = ois.readObject();
+                if( !(obj instanceof DHPublicKey) ) throw new ClassNotFoundException();
+                else {
+                    dh.receivePublicKey((DHPublicKey) obj); 
+                    dh.generateSharedSecret();
+                }
+                ois.close();
+            }         
+        }
+
+    }
+    
+    public ByteArrayOutputStream writePublicKey() throws 
+            IOException, InvalidKeyException, NoSuchAlgorithmException, 
+            NoSuchProviderException, SignatureException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             BufferedOutputStream bois = new BufferedOutputStream(bos);
             ObjectOutputStream oos = new ObjectOutputStream(bois);
             oos.writeObject(dh.getPublicKey());
             oos.flush();
-            myBytes = bos.toByteArray();
+            bos.close();
+            signPublicKey(bos);
+            return bos;
         }
-        return myBytes;
+        
+        
     }
     
     /**
@@ -101,20 +138,135 @@ public class ClientDH implements DecEncClient {
         return encryptedMessage.toByteArray();
     }
     
+    private void initSigning() throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+        SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+
+        keyGen.initialize(1024, random);
+
+        KeyPair pair = keyGen.generateKeyPair();
+        myPrivateKey = pair.getPrivate();
+        myPublicKey = pair.getPublic();
+        byte[] key = myPublicKey.getEncoded();
+        try (FileOutputStream keyfos = new FileOutputStream(PUBLIC_KEY_FILE)) {
+            keyfos.write(key);
+        }
+    }
     
+    /**
+     Signing the public key byte object output stream.
+     * @param boas - the public key for DH exchange to be signed
+     * @throws java.security.InvalidKeyException
+     * @throws java.security.NoSuchAlgorithmException
+     * @throws java.security.NoSuchProviderException
+     * @throws java.io.IOException
+     * @throws java.security.SignatureException
+     */
+    public void signPublicKey(ByteArrayOutputStream boas) 
+            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SignatureException {
+
+        /* Create a Signature object and initialize it with the private key */
+
+        Signature dsa = Signature.getInstance("SHA1withDSA", "SUN"); 
+
+        dsa.initSign(myPrivateKey);
+        
+        try (BufferedInputStream bufin = new BufferedInputStream(
+                new ByteArrayInputStream(boas.toByteArray()))) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while (bufin.available() != 0) {
+                len = bufin.read(buffer);
+                dsa.update(buffer, 0, len);
+            }
+        }
+        
+        /* Now that all the data to be signed has been read in, 
+        generate a signature for it */
+
+        byte[] realSig = dsa.sign();
+
+         /* Save the signature in a file */ 
+        try (FileOutputStream sigfos = new FileOutputStream(SIGNATURE_FILE)) {
+            sigfos.write(realSig);
+        }
+
+    }
+    
+    /**
+     * Verify the signature.
+     * @param boas
+     * @param signatureFile
+     * @param publicKeyFile
+     * @return true if the signature verifies else if not
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws InvalidKeySpecException
+     * @throws InvalidKeyException
+     * @throws SignatureException 
+     */
+    public boolean verifyPublicKeySignature(ByteArrayOutputStream boas, 
+            String signatureFile, String publicKeyFile) throws 
+            FileNotFoundException, IOException, NoSuchAlgorithmException, 
+            NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+            
+        byte[] encKey;
+        try (FileInputStream keyfis = new FileInputStream(publicKeyFile)) {
+            encKey = new byte[keyfis.available()];
+            keyfis.read(encKey);
+        }
+
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
+
+        KeyFactory keyFactory = KeyFactory.getInstance("DSA", "SUN");
+        PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
+
+        byte[] sigToVerify;
+        try (FileInputStream sigfis = new FileInputStream(signatureFile)) {
+            sigToVerify = new byte[sigfis.available()];
+            sigfis.read(sigToVerify );
+        }
+
+        /* create a Signature object and initialize it with the public key */
+        Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
+        sig.initVerify(pubKey);
+
+        /* Update and verify the data */
+        try (BufferedInputStream bufin = new BufferedInputStream(
+                new ByteArrayInputStream(boas.toByteArray()))) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while (bufin.available() != 0) {
+                len = bufin.read(buffer);
+                sig.update(buffer, 0, len);
+            }
+        }
+
+
+        boolean verifies = sig.verify(sigToVerify);
+        return verifies;
+
+    }
+    
+    /**
+     * 
+     * @param args 
+     */
     public static void main(String[] args) {
         try {
             ClientDH karol = new ClientDH("Karol");
             
-            byte[] karolkey = karol.writePublicKey();
+            ByteArrayOutputStream karolkey = karol.writePublicKey();
             
             ClientDH dominik = new ClientDH("Dominik");
             
-            dominik.receivePublicKey(karolkey);
+            dominik.receivePublicKey(karolkey, karol.SIGNATURE_FILE, karol.PUBLIC_KEY_FILE);
             
-            byte[] dominikkey = dominik.writePublicKey();
+            ByteArrayOutputStream dominikkey = dominik.writePublicKey();
             
-            karol.receivePublicKey(dominikkey);
+            karol.receivePublicKey(dominikkey, dominik.SIGNATURE_FILE, dominik.PUBLIC_KEY_FILE);
             
             String message = "gogwfffknkf wfwefkmwfkmeg";
             
@@ -131,7 +283,7 @@ public class ClientDH implements DecEncClient {
             System.out.println(decryption);
             
             
-        } catch (IOException | ClassNotFoundException ex) {
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException  | InvalidKeySpecException ex) {
             Logger.getLogger(ClientDH.class.getName()).log(Level.SEVERE, null, ex);
         }
         
