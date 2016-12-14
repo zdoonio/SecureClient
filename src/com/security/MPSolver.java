@@ -110,19 +110,7 @@ public class MPSolver implements CBCEncryptable {
                
                 }
                 
-            } catch (NoSuchAlgorithmException ex) {
-                found = false;
-            } catch (NoSuchPaddingException ex) {
-                found = false;
-            } catch (InvalidKeyException ex) {
-                found = false;
-            } catch (InvalidAlgorithmParameterException ex) {
-                found = false;
-            } catch (IllegalBlockSizeException ex) {
-                found = false;
-            } catch (BadPaddingException ex) {
-                found = false;
-            } catch (NumberFormatException ex) {
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NumberFormatException ex) {
                 found = false;
             }
         }
@@ -256,23 +244,14 @@ public class MPSolver implements CBCEncryptable {
      * @param iv
      * @return 
      */
+    @Override
     public byte[] encrypt(String plaintext, IvParameterSpec iv) {
         try {
             Cipher cipher = Cipher.getInstance(MPCreator.ENC_DEC_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, sessionKey, iv);
             byte[] encryption = cipher.doFinal(plaintext.getBytes());
             return encryption;
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -284,23 +263,14 @@ public class MPSolver implements CBCEncryptable {
      * @param iv - the iv to be used when decrypting
      * @return the decrypted text
      */
+    @Override
     public String decrypt(byte[] ciphertext, IvParameterSpec iv) {
          try {
             Cipher cipher = Cipher.getInstance(MPCreator.ENC_DEC_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, sessionKey, iv);
             byte[] decryption = cipher.doFinal(ciphertext);
             return new String(decryption);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -332,19 +302,7 @@ public class MPSolver implements CBCEncryptable {
                    
             System.out.println(decrypt);
             
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        }  catch (NoSuchPaddingException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
-            Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
-        }  catch (InvalidAlgorithmParameterException ex) {
+        } catch (NoSuchAlgorithmException | IOException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException ex) {
             Logger.getLogger(MPSolver.class.getName()).log(Level.SEVERE, null, ex);
         }
         

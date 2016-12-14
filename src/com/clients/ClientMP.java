@@ -15,13 +15,13 @@ import javax.crypto.spec.IvParameterSpec;
  *
  * @author Karol
  */
-public class ClientMP implements DecEncClient {
+public class ClientMP implements ChatClient {
     
     public static final int ALICE = 0;
     
     public static final int BOB = 1;
     
-    public static final int NUMBER_OF_PUZZLES = 100000; 
+    public static final int NUMBER_OF_PUZZLES = 1000000; 
     
     private MPCreator mpc;
     
@@ -51,6 +51,16 @@ public class ClientMP implements DecEncClient {
 
     @Override
     public byte[] receiveMessage(ByteArrayOutputStream encryptedMessage) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ByteArrayOutputStream writeIv(IvParameterSpec iv) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public IvParameterSpec receiveIv(ByteArrayOutputStream iv) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

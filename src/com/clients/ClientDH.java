@@ -35,7 +35,7 @@ import javax.crypto.spec.IvParameterSpec;
  *
  * @author Karol
  */
-public class ClientDH implements DecEncClient {
+public class ClientDH implements ChatClient {
     
     /**
      * The name of this Client.
@@ -43,6 +43,8 @@ public class ClientDH implements DecEncClient {
     public final String name;
     
     private final DiffieHellman dh;
+    
+    private final WriteReceiveClient wrc;
     
     private PublicKey myPublicKey;
     
@@ -56,6 +58,7 @@ public class ClientDH implements DecEncClient {
         this.name = name;
         dh = new DiffieHellman();
         dh.generateKeys();
+        wrc = new WriteReceiveClientImpl();
         PUBLIC_KEY_FILE = "dh/" + name + "DH" + ".suepk";
         SIGNATURE_FILE = "dh/" + name + "DH" + ".sig";
         initSigning();
@@ -122,20 +125,23 @@ public class ClientDH implements DecEncClient {
     
     @Override
     public ByteArrayOutputStream writeMessage(byte[] encryptedMessage) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write(encryptedMessage, 0, encryptedMessage.length);
-            baos.close();
-            return baos;
-        } catch (IOException ex) {
-            Logger.getLogger(ClientDH.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+        return wrc.writeMessage(encryptedMessage);
     }
 
     @Override
     public byte[] receiveMessage(ByteArrayOutputStream encryptedMessage) {
-        return encryptedMessage.toByteArray();
+        return wrc.receiveMessage(encryptedMessage);
+    }
+    
+    
+    @Override
+    public ByteArrayOutputStream writeIv(IvParameterSpec iv) {
+        return wrc.writeIv(iv);
+    }
+
+    @Override
+    public IvParameterSpec receiveIv(ByteArrayOutputStream iv) {
+        return wrc.receiveIv(iv);
     }
     
     private void initSigning() throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
@@ -256,30 +262,54 @@ public class ClientDH implements DecEncClient {
      */
     public static void main(String[] args) {
         try {
-            ClientDH karol = new ClientDH("Karol");
             
-            ByteArrayOutputStream karolkey = karol.writePublicKey();
+            // każdy Client jest typem ChatClient, tworzymy więc obiekt tego typu
+            // i inicjalizujemy jako ClientDH
+            ChatClient karol = new ClientDH("Karol");
             
+            // Pobieramy do Streama klucz publiczny klienta, ponieważ wiemy że 
+            // aktualny obiekt jest właściwie obiektem ClientDH, więc możemy castować, 
+            // żeby odwołać się do metod z klasy ClientDH (bo nie każdy ChatClient ma publiczne klucze etc.)
+            ByteArrayOutputStream karolkey = ((ClientDH) karol).writePublicKey();
+            
+            // to samo inny klient
             ClientDH dominik = new ClientDH("Dominik");
-            
-            dominik.receivePublicKey(karolkey, karol.SIGNATURE_FILE, karol.PUBLIC_KEY_FILE);
-            
             ByteArrayOutputStream dominikkey = dominik.writePublicKey();
             
-            karol.receivePublicKey(dominikkey, dominik.SIGNATURE_FILE, dominik.PUBLIC_KEY_FILE);
+            // Dominik otrzymuje publiczny klucz Karola - klucz jest obiektem ByteArrayOutPutStream, 
+            // zaś dwie pozostałe argumenty to nazwa pliku zawierającego podpis cyfrowy oraz pliku
+            // zawierającego klucz publiczny (ALE NIE TEN DO SZYFROWANIA KOMUNIKACJI, TYLKO DO PODPISU CYFROWEGO)
+            // oba pliki powinny być wysłane np. korzystając z RemoteInputStream
+            dominik.receivePublicKey(karolkey, ((ClientDH) karol).SIGNATURE_FILE, ((ClientDH)karol).PUBLIC_KEY_FILE);
             
-            String message = "gogwfffknkf wfwefkmwfkmeg";
+            // to samo dla Karola
+            ((ClientDH) karol).receivePublicKey(dominikkey, dominik.SIGNATURE_FILE, dominik.PUBLIC_KEY_FILE);
             
+            // Karol chce wysłać wiadomość - to już są metody, które może wywołać każdy ChatClient
+            String message = "Dominik, spałem cztery godziny.";
+            // Karol generuje iv. (ponieważ enckrypcja jest w modzie CBC)
             IvParameterSpec iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);
-            
+            // Karol enkryptuje
             byte[] encryption = karol.encrypt(message, iv);
-            
+            // Karol zapisuje zaenkryptowaną wiadomość do strumienia - teraz można ją wysłać na serwer.
             ByteArrayOutputStream baos = karol.writeMessage(encryption);
+            // do odszyfrowania potrzebny jest ten sam iv, więc też zapisywany do strumienia 
+            // i można go wysłać na serwer.
+            ByteArrayOutputStream biv = karol.writeIv(iv);
             
+            //// Powiedzmy, że serwer otrzymuje obie wiadomości i coś tam sobie robi.
+            
+            // Dominik otrzymuje wiadomość od serwera (otrzymuje obiekt ByteArrayOutputStream 
+            // - powinien być input, ale już chuj.) oczywiście kazdy ChatClient może zrobić to, co Dominik teraz.
             byte[] received = dominik.receiveMessage(baos);
             
-            String decryption = dominik.decrypt(received, iv);
+            // Dominik otrzymuje iv.
+            IvParameterSpec iv2 = dominik.receiveIv(biv);
             
+            // Dominik jako typ ChatClient może decryptować mając wiadomość i iv.
+            String decryption = dominik.decrypt(received, iv2);
+            
+            // Dominik odczytuje wiadomość i wypisuje na ekranie.
             System.out.println(decryption);
             
             
@@ -290,5 +320,6 @@ public class ClientDH implements DecEncClient {
         
         
     }
+
     
 }

@@ -5,11 +5,11 @@
  */
 package com.clients;
 
-import java.io.ByteArrayOutputStream;
+
 import javax.crypto.spec.IvParameterSpec;
 
 /**
- *
+ * Ekryptowanie i Dekryptowanie wiadmości. CBC.
  * @author Karol
  */
 public interface DecEncClient {
@@ -18,8 +18,5 @@ public interface DecEncClient {
     
     public String decrypt(byte[] message, IvParameterSpec iv);
 
-    public ByteArrayOutputStream writeMessage(byte[] encryptedMessage);
-    
-    public byte[] receiveMessage(ByteArrayOutputStream encryptedMessage);
     
 }

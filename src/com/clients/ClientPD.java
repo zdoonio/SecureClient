@@ -12,7 +12,7 @@ import javax.crypto.spec.IvParameterSpec;
  *
  * @author Karol
  */
-public class ClientPD implements DecEncClient {
+public class ClientPD implements ChatClient {
 
     public final String name;
     
@@ -20,11 +20,14 @@ public class ClientPD implements DecEncClient {
     
     public final static int BOB = 1;
     
+    private final WriteReceiveClient wrc; 
+    
     private final KeyAgreementEntity kae;
     
     public ClientPD(String name) {
         this.name = name;
         kae = new KeyAgreementEntity();
+        wrc = new WriteReceiveClientImpl();
     }
     
     public void init(int BobOrAlice, String password) throws 
@@ -69,37 +72,72 @@ public class ClientPD implements DecEncClient {
 
     @Override
     public ByteArrayOutputStream writeMessage(byte[] encryptedMessage) {
-        return null;
+        return wrc.writeMessage(encryptedMessage);
     }
 
     @Override
     public byte[] receiveMessage(ByteArrayOutputStream encryptedMessage) {
-        return null;
+        return wrc.receiveMessage(encryptedMessage);
     }
+    
+    @Override
+    public ByteArrayOutputStream writeIv(IvParameterSpec iv) {
+        return wrc.writeIv(iv);
+    }
+
+    @Override
+    public IvParameterSpec receiveIv(ByteArrayOutputStream iv) {
+        return wrc.receiveIv(iv);
+    }
+    
     
     
     public static void main(String[] args) throws InvalidKeySpecException, Exception {
         
-        String password = "gowno";
+        // W tym podejściu klient Alicja i klient Bob wcześniej się spotkali i umówili się,
+        // że będą mieli wspólne hasło
+        String password = "gowno"; // bez polskich znaków należy pamiętać o tym
         
-        ClientPD Alice = new ClientPD("Alice");
-        Alice.init(ClientPD.ALICE, password);
+        // Tworzymy klientów, trzeba pamiętać, że nie może być dwóhc Alice, albo dwóch Bobów na raz.
+        // Zawsze jeden klient to Alice drugi to Bob. (chodzi o flagi ClientPD.Alice, ClientPD.Bob)
+        // robimy init ich z tym ich hasłem i flagą, kto jest kto.
+        ChatClient Alice = new ClientPD("Alice");
+        ((ClientPD) Alice).init(ClientPD.ALICE, password); // tu jest flaaga Alice
         
-        ClientPD Bob = new ClientPD("Bob");
-        Bob.init(ClientPD.BOB, password);
+        ChatClient Bob = new ClientPD("Bob");
+        ((ClientPD) Bob).init(ClientPD.BOB, password); // tu jest flaga Bob
         
-        ByteArrayOutputStream key = Alice.encryptSessionKey();
+        // Alicja zawsze (z powodu flagi) 
+        // generuje klucz sesji, więc to dla niej należy wywołać metodę encryptSessionKey()
+        ByteArrayOutputStream key = ((ClientPD) Alice).encryptSessionKey();
         
-        Bob.receiveSessionKey(key);
+        // Bob otrzymuje zaszyfrowany klucz sesji. jak go otrzymuje, to sam od razu do deckryptuje 
+        // i w ten sposób umówili się na wspólny klucz sesji.
+        ((ClientPD) Bob).receiveSessionKey(key);
         
+        // I poniżej używamy metod ChatClienta
+        
+        // Alicja chce teraz wysłać wiadomość.
+        String message = "Bob, słyszysz mnie?";
+        // Alicja generuje iv.
         IvParameterSpec iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);
+        // Alicja enkryptuje wiadomosc.
+        byte[] encryption = Alice.encrypt(message, iv);
+        // Alicja wpakowuje w strumień wiadomość oraz iv
+        ByteArrayOutputStream boas = Alice.writeMessage(encryption);
+        ByteArrayOutputStream ivboas = Alice.writeIv(iv);
         
-        byte[] encryption = Alice.encrypt("Zamknij mordę", iv);
+        // Bob otrzymuje strumień z wiadomością i strumień z iv.
+        byte[] received = Bob.receiveMessage(boas);
+        IvParameterSpec iv2 = Bob.receiveIv(ivboas);
         
-        String decryption = Bob.decrypt(encryption, iv);
+        // Bob dekryptuje
+        String decryption = Bob.decrypt(received, iv2);
         
+        // Bob wyświetla wiadomość.
         System.out.println(decryption);
         
     }
-    
+
+
 }
