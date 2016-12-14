@@ -26,25 +26,32 @@ public class ClientGUI extends JFrame implements ActionListener {
 	//													   //
 	/*-----------------------------------------------------*/
 	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh;
-	private JComboBox<String> securityChooser, pubkeyChooser, privkeyChooser,
-			destiChooser;
+	private static JComboBox<String> securityChooser;
+	private JComboBox<String> pubkeyChooser;
+	private JComboBox<String> privkeyChooser;
+	private static JComboBox<String> destiChooser;
 	private JLabel lname, ldestiUser, lpubkey, lprivkey, lsecu;
 	private JTextArea messageText, plainText;
 	private JOptionPane pcommunication;
 
 	private DiffieHellman df;
 	private Rsa rsa;
-	private Client client;
-	private int globalFlag = 0;
+	private static Client client;
+	private static int globalFlag = 0;
+	private static String targetName = null;
+	private static boolean flagState = false;
+	private static String name;
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 188489L;
 
 	public ClientGUI() throws IOException {
+		
 		super("Secured Chat Client v0.3");
 		// WINDOW INIT
 		setSize(500, 600);
+		name = MainAppGUI.getClientName();
 		setName("Secured Chat Client v0.3");
 		setLayout(null);
 		setResizable(false);
@@ -134,12 +141,22 @@ public class ClientGUI extends JFrame implements ActionListener {
 		destiChooser.addActionListener(this);
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NotBoundException {
 		// WINDOW OPEN
 		ClientGUI mainWin = new ClientGUI();
 		mainWin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainWin.setVisible(true);
-
+		while(true){
+			if(targetName!=null){
+				System.out.print("Getted Transmition");
+				flagState = true;
+			}
+			if(flagState==true){
+				Agreement();
+				flagState=false;
+			}
+		}
+	
 	}
 
 	public void CloseFrame() {
@@ -150,9 +167,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	}
 	
-	public void Agreement() throws MalformedURLException, RemoteException, NotBoundException{
+	public static void Agreement() throws MalformedURLException, RemoteException, NotBoundException{
 		String ipadd = MainAppGUI.getIpName();
-		String targetName = null;
+		targetName = null;
 		int localFlag = 0;
 		try {
 			localFlag = client.getFlag(ipadd);
@@ -169,24 +186,28 @@ public class ClientGUI extends JFrame implements ActionListener {
 		
 	}
 	
-	public void SetKeyAgreement(int flag) throws MalformedURLException, RemoteException, NotBoundException{
+	public static void SetKeyAgreement(int flag) throws MalformedURLException, RemoteException, NotBoundException{
 		securityChooser.setEnabled(false);
 		destiChooser.setEnabled(false);
 		switch (flag) {
 
 		case 0:
-			rsa = new Rsa();
-			rsa.generateKey();
+			//rsa = new Rsa();
+			//rsa.generateKey();
 			break;
 
 		case 1:
 			// df = new DiffieHellman();
 			// df.generateKeys();
-			String name = MainAppGUI.getClientName();
+			//!!!!!!!!!!!!!
+			if(targetName == name){
+				
+			}
+			else{
 			String ipadd = MainAppGUI.getIpName();
 			client.Init(flag, name);
 			client.sendAgreementInfo(globalFlag,name,ipadd);
-			
+			}
 			
 			break;
 
