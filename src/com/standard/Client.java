@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.rmi.*;
+import java.rmi.server.ServerNotActiveException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.*;
@@ -59,7 +60,7 @@ public class Client {
 		return t;
 	}
 	
-	public String getClientName(String ipadd) throws RemoteException, MalformedURLException, NotBoundException{
+	public String getClientName(String ipadd) throws RemoteException, MalformedURLException, NotBoundException, ServerNotActiveException{
 		
 			obj = (ServerIntf) Naming
 					.lookup("//"+ipadd+"/ServerSecure");
@@ -96,7 +97,7 @@ public class Client {
 			break;
 
 		case 1:
-			encdec = new ClientDH(name);
+			//encdec = new ClientDH(name);
 			break;
 
 		case 2:

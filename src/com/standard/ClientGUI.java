@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.ServerNotActiveException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	//					Copyright © 2016				   //
 	//													   //
 	/*-----------------------------------------------------*/
-	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh;
+	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh, bserverinfo;
 	private static JComboBox<String> securityChooser;
 	private JComboBox<String> pubkeyChooser;
 	private JComboBox<String> privkeyChooser;
@@ -82,6 +83,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 		brefresh.setBounds(345, 20, 150, 20);
 		add(brefresh);
 		brefresh.addActionListener(this);
+		bserverinfo = new JButton("SERVER INFO");
+		bserverinfo.setBounds(180, 180, 150, 30);
+		add(bserverinfo);
+		bserverinfo.addActionListener(this);
 
 		// text field area init
 		messageText = new JTextArea("");
@@ -143,7 +148,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		destiChooser.addActionListener(this);
 	}
 
-	public static void main(String[] args) throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchProviderException {
+	public static void main(String[] args) throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, ServerNotActiveException {
 		// WINDOW OPEN
 		ClientGUI mainWin = new ClientGUI();
 		mainWin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -169,7 +174,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	}
 	
-	public static void Agreement() throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException{
+	public static void Agreement() throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException, ServerNotActiveException{
 		String ipadd = MainAppGUI.getIpName();
 		targetName = null;
 		int localFlag = 0;
