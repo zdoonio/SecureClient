@@ -194,7 +194,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			
 			if(o == bok){
 				securityChooser.setEnabled(false);
-				//destiChooser.setEnabled(false);
+				destiChooser.setEnabled(false);
 				switch(flag){
 				
 				case 0:
