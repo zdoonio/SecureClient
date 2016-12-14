@@ -6,7 +6,12 @@ import java.awt.event.*;
 import java.io.IOException;
 
 public class MainAppGUI extends JFrame implements ActionListener {
-
+	/*-----------------------------------------------------*/
+	//													   //
+	//				CREATED BY DOMINIK ZEDD				   //
+	//					Copyright © 2016				   //
+	//													   //
+	/*-----------------------------------------------------*/
 	private JButton blogin, bcancel;
 	private JLabel lnameapp, lname, lpw, lip, lport;
 	private JTextField tname, tip, tport;
