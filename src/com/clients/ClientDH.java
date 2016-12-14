@@ -56,8 +56,8 @@ public class ClientDH implements DecEncClient {
         this.name = name;
         dh = new DiffieHellman();
         dh.generateKeys();
-        PUBLIC_KEY_FILE = name + "DH" + ".suepk";
-        SIGNATURE_FILE = name + "DH" + ".sig";
+        PUBLIC_KEY_FILE = "dh/" + name + "DH" + ".suepk";
+        SIGNATURE_FILE = "dh/" + name + "DH" + ".sig";
         initSigning();
         
     }

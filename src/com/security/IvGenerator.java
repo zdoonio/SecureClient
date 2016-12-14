@@ -23,6 +23,11 @@ public class IvGenerator {
      */
     public static final int AES_BLOCK_SIZE = 128 / 8;
     
+    /**
+     * DES block size in bytes.
+     */
+    public static final int DES_BLOCK_SIZE = 64 / 8;
+    
     public static IvParameterSpec generateIV(int blockSize) {
         try {
             SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
