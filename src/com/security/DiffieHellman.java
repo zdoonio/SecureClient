@@ -9,6 +9,7 @@ import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -69,10 +70,10 @@ public class DiffieHellman implements CBCEncryptable {
     
     /**
      * TODO: Receive a serialized key.
-     * @param publicKey 
+     * @param pubkey 
      */
-    public void receivePublicKey(DHPublicKey publicKey) {
-        receivedPublicKey = publicKey;
+    public void receivePublicKey(PublicKey pubkey) {
+        receivedPublicKey = (DHPublicKey) pubkey;
     }
     
     /**

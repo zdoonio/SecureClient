@@ -1,9 +1,11 @@
 package com.standard;
 
+import javax.crypto.spec.IvParameterSpec;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import com.security.DiffieHellman;
+import com.security.IvGenerator;
 import com.security.Rsa;
 
 import java.awt.*;
@@ -43,6 +45,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	private DiffieHellman df;
 	private Rsa rsa;
+	private IvParameterSpec iv;
 	private static Client client;
 	private static int globalFlag = 0;
 	private static String targetName = null;
@@ -52,6 +55,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private String msgFromClient;
 	private PublicKey pubkey = null;
 	private byte[] CipherText,PlainText;
+	private int blocksize = IvGenerator.AES_BLOCK_SIZE;
 
 	/**
 	 * 
@@ -65,6 +69,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		setSize(500, 600);
 		name = MainAppGUI.getClientName();
 		ipadd = MainAppGUI.getIpName();
+		iv = IvGenerator.generateIV(blocksize);
 		setName("Secured Chat Client v0.3");
 		setLayout(null);
 		setResizable(false);
@@ -354,6 +359,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 		}
 
 		if (o == bencrypt) {
+			switch(globalFlag){
+				case 0:
 			String msg = messageText.getText();
 			CipherText = Rsa.encrypt(msg, pubkey);
 			try {
@@ -364,6 +371,23 @@ public class ClientGUI extends JFrame implements ActionListener {
 				e1.printStackTrace();
 			}
 			System.out.println("This is encrypted: "+ CipherText);
+				break;
+				
+				case 1:
+					String msg1 = messageText.getText();
+					CipherText = df.encrypt(msg1, iv);
+				try {
+					client.sendMessage(ipadd, CipherText);
+				} catch (MalformedURLException | RemoteException
+						| NotBoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println("This is encrypted: "+ CipherText);
+					break;
+			}
+			
+			
 			return;
 		}
 
@@ -376,7 +400,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 				e1.printStackTrace();
 			}
 			ObjectInputStream inputStream = null;
+			switch(globalFlag){
+			case 0:
 			try {
+				
 				inputStream = new ObjectInputStream(new FileInputStream("keysrsa/"+name+"private.key"));
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -392,6 +419,12 @@ public class ClientGUI extends JFrame implements ActionListener {
 			msgFromClient = rsa.decrypt(PlainText, privateKey);
 			System.out.println("This representation: "+ PlainText);
 			System.out.println("This is decrypted: "+msgFromClient);
+			break;
+			
+			case 1:
+				df.decrypt(PlainText, iv);
+				break;
+			}
 			return;
 		}
 		
@@ -446,6 +479,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 			} catch (NotBoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
+			}
+			if(globalFlag == 1){
+				df.receivePublicKey(pubkey);
+				df.generateSharedSecret();
 			}
 			return;
 		}
