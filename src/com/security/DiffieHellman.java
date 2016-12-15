@@ -1,7 +1,11 @@
 
 package com.security;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -41,6 +45,8 @@ public class DiffieHellman implements CBCEncryptable {
 
     private SecureRandom random;
     
+    private static int blocksize = IvGenerator.AES_BLOCK_SIZE;
+    private IvParameterSpec iv;
     /**
      * Algorithm used for shortening the key in order to encrypt and decrypt messages.
      */
@@ -161,11 +167,21 @@ public class DiffieHellman implements CBCEncryptable {
  
     } 
     
-    public void keySave(String name) throws FileNotFoundException{
+    public void keySave(String name) throws IOException{
     	
-    	PrintWriter pubKey = new PrintWriter("keysdh/pubkeydh"+name+".key");
-        pubKey.println(publicKey);
-        pubKey.close();
+    	File pubKeyFile = new File("keysdh/pubkeydh"+name+".key");
+    	if (pubKeyFile.getParentFile() != null) {
+    		pubKeyFile.getParentFile().mkdirs();
+          }
+    		pubKeyFile.createNewFile();
+    		
+    		  ObjectOutputStream publicKeyOS = new ObjectOutputStream(
+    		          new FileOutputStream(pubKeyFile));
+    		      publicKeyOS.writeObject(publicKey);
+    		      publicKeyOS.close();
+    	//PrintWriter pubKey = new PrintWriter("keysdh/pubkeydh"+name+".key");
+        //pubKey.println(publicKey);
+        //pubKey.close();
     }
     
     /**
@@ -174,6 +190,10 @@ public class DiffieHellman implements CBCEncryptable {
      */
     public DHPublicKey getPublicKey() {
         return publicKey;
+    }
+    
+    public IvParameterSpec genereteIV(){
+    	return iv = IvGenerator.generateIV(blocksize);
     }
 
     
@@ -184,7 +204,7 @@ public class DiffieHellman implements CBCEncryptable {
      */
     public static void main(String[] args) throws FileNotFoundException {
 
-        int blocksize = IvGenerator.AES_BLOCK_SIZE;
+        //int blocksize = IvGenerator.AES_BLOCK_SIZE;
         DiffieHellman df = new DiffieHellman();
         df.generateKeys();
 
@@ -200,7 +220,7 @@ public class DiffieHellman implements CBCEncryptable {
         PrintWriter pubKey = new PrintWriter("keysdh/pubkeydh"+name+".key");
         //pubKey.println(df.getPublicKey());
         pubKey.close();
-        df2.keySave("Leszek");
+       // df2.keySave("Leszek");
         df.generateSharedSecret();
         df2.generateSharedSecret();
 

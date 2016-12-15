@@ -69,7 +69,6 @@ public class ClientGUI extends JFrame implements ActionListener {
 		setSize(500, 600);
 		name = MainAppGUI.getClientName();
 		ipadd = MainAppGUI.getIpName();
-		iv = IvGenerator.generateIV(blocksize);
 		setName("Secured Chat Client v0.3");
 		setLayout(null);
 		setResizable(false);
@@ -210,7 +209,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	
 
 	
-	public void genKeys() throws RemoteException, MalformedURLException, NotBoundException, ServerNotActiveException, FileNotFoundException{
+	public void genKeys() throws NotBoundException, ServerNotActiveException, IOException{
 		
 		switch (globalFlag) {
 
@@ -226,6 +225,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			df = new DiffieHellman();
 			df.generateKeys();
 			df.keySave(name);
+			iv = df.genereteIV();
 			break;
 
 		case 2:
@@ -422,7 +422,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 			break;
 			
 			case 1:
-				df.decrypt(PlainText, iv);
+				msgFromClient = df.decrypt(PlainText, iv);
+				System.out.println("This is decrypted: "+msgFromClient);
+				System.out.println("This representation: "+ PlainText);
 				break;
 			}
 			return;
@@ -430,16 +432,12 @@ public class ClientGUI extends JFrame implements ActionListener {
 		
 		if (o == bgenkeys){
 			try {
-				genKeys();
-			} catch (RemoteException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (MalformedURLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				try {
+					genKeys();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			} catch (NotBoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -562,6 +560,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 		if (o == securityChooser) {
 			flagSetter();
+			System.out.println("Global flag is: "+ globalFlag);
 		}
 
 		if (o == destiChooser) {
