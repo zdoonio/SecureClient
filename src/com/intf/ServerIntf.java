@@ -3,6 +3,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 
@@ -15,13 +16,9 @@ public interface ServerIntf extends Remote {
 	//													   //
 	/*-----------------------------------------------------*/
 	
-	public String getMessage1() throws RemoteException;
-
-	public String getMessage2() throws RemoteException;
+	public byte[] getMessage() throws RemoteException;
 	
-	public void sendMessage1(String message) throws RemoteException;
-	
-	public void sendMessage2(String message) throws RemoteException;
+	public void sendMessage(byte[] message) throws RemoteException;
 	
 	public void sendFlagState(int flag) throws RemoteException;
 	
@@ -40,5 +37,9 @@ public interface ServerIntf extends Remote {
 	public void setZalogowano(boolean zalogowano) throws RemoteException;
 
 	public boolean isLogedIn() throws RemoteException;
+
+	public void sendPublicKey(PublicKey publicKey) throws RemoteException;
+	
+	PublicKey getPublicKey() throws RemoteException;
 
 }

@@ -47,14 +47,14 @@ private static ObjectInputStream inputStream;
    * @throws IOException
    * @throws FileNotFoundException
    */
-  public void generateKey() {
+  public void generateKey(String name) {
     try {
       final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
       keyGen.initialize(1024);
       final KeyPair key = keyGen.generateKeyPair();
 
-      File privateKeyFile = new File(PRIVATE_KEY_FILE);
-      File publicKeyFile = new File(PUBLIC_KEY_FILE);
+      File privateKeyFile = new File("keysrsa/"+name+"private.key");
+      File publicKeyFile = new File("keysrsa/"+name+"public.key");
 
       // Create files to store public and private key
       if (privateKeyFile.getParentFile() != null) {

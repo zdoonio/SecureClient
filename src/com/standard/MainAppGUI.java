@@ -59,7 +59,7 @@ public class MainAppGUI extends JFrame implements ActionListener {
 		add(tip);
 		tport = new JTextField("1500");
 		tport.setBounds(190, 150, 150, 20);
-		add(tport);
+		//add(tport);
 
 		// label
 		lnameapp = new JLabel("To Server");
@@ -76,7 +76,7 @@ public class MainAppGUI extends JFrame implements ActionListener {
 		add(lip);
 		lport = new JLabel("Port");
 		lport.setBounds(100, 150, 150, 20);
-		add(lport);
+		//add(lport);
 
 		/*
 		 * try{

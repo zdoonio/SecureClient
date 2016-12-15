@@ -10,14 +10,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 public class ClientGUI extends JFrame implements ActionListener {
@@ -28,7 +32,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	//					Copyright © 2016				   //
 	//													   //
 	/*-----------------------------------------------------*/
-	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh, bserverinfo;
+	private JButton bencrypt, bexit, bdecrypt, bsend, bok, brefresh, bserverinfo, bgenkeys, bsendpubkey, bgetpubkey, bgetlastmsg;
 	private static JComboBox<String> securityChooser;
 	private JComboBox<String> pubkeyChooser;
 	private JComboBox<String> privkeyChooser;
@@ -44,6 +48,11 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private static String targetName = null;
 	private static boolean flagState = false;
 	private static String name;
+	private static String ipadd;
+	private String msgFromClient;
+	private PublicKey pubkey = null;
+	private byte[] CipherText,PlainText;
+
 	/**
 	 * 
 	 */
@@ -55,6 +64,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		// WINDOW INIT
 		setSize(500, 600);
 		name = MainAppGUI.getClientName();
+		ipadd = MainAppGUI.getIpName();
 		setName("Secured Chat Client v0.3");
 		setLayout(null);
 		setResizable(false);
@@ -83,10 +93,26 @@ public class ClientGUI extends JFrame implements ActionListener {
 		brefresh.setBounds(345, 20, 150, 20);
 		add(brefresh);
 		brefresh.addActionListener(this);
-		bserverinfo = new JButton("SERVER INFO");
-		bserverinfo.setBounds(180, 180, 150, 30);
+		bserverinfo = new JButton("USER INFO");
+		bserverinfo.setBounds(180, 140, 150, 30);
 		add(bserverinfo);
 		bserverinfo.addActionListener(this);
+		bgenkeys = new JButton("GEN KEYS");
+		bgenkeys.setBounds(180, 180, 150, 30);
+		add(bgenkeys);
+		bgenkeys.addActionListener(this);
+		bsendpubkey= new JButton("SEND PUBKEY");
+		bsendpubkey.setBounds(180, 220, 150, 30);
+		add(bsendpubkey);
+		bsendpubkey.addActionListener(this);
+		bgetpubkey= new JButton("GET PUBKEY");
+		bgetpubkey.setBounds(180, 260, 150, 30);
+		add(bgetpubkey);
+		bgetpubkey.addActionListener(this);
+		bgetlastmsg= new JButton("GET MSG");
+		bgetlastmsg.setBounds(180, 300, 150, 30);
+		add(bgetlastmsg);
+		bgetlastmsg.addActionListener(this);
 
 		// text field area init
 		messageText = new JTextArea("");
@@ -102,7 +128,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		lname = new JLabel("CLIENT APP");
 		lname.setBounds(200, 10, 150, 20);
 		add(lname);
-		ldestiUser = new JLabel("Destination User");
+		ldestiUser = new JLabel("You name: "+name);
 		ldestiUser.setBounds(20, 50, 200, 20);
 		add(ldestiUser);
 		lsecu = new JLabel("Choose key agreement");
@@ -147,6 +173,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 		add(destiChooser);
 		destiChooser.addActionListener(this);
 	}
+	
+
+
 
 	public static void main(String[] args) throws IOException, NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, ServerNotActiveException {
 		// WINDOW OPEN
@@ -174,8 +203,44 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	}
 	
+
+	
+	public void genKeys() throws RemoteException, MalformedURLException, NotBoundException, ServerNotActiveException, FileNotFoundException{
+		
+		switch (globalFlag) {
+
+		case 0:
+			rsa = new Rsa();
+			rsa.generateKey(name);
+			//String ipadd = MainAppGUI.getIpName();
+			//targetName = client.getClientName(ipadd);
+			break;
+			
+
+		case 1:
+			df = new DiffieHellman();
+			df.generateKeys();
+			df.keySave(name);
+			break;
+
+		case 2:
+
+			break;
+
+		case 3:
+
+			break;
+
+		case 4:
+
+			break;
+
+		}
+		
+	}
+	
 	public static void Agreement() throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException, ServerNotActiveException{
-		String ipadd = MainAppGUI.getIpName();
+		//String ipadd = MainAppGUI.getIpName();
 		targetName = null;
 		int localFlag = 0;
 		try {
@@ -185,7 +250,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Target name:"+targetName+" localFlag"+localFlag);
+		System.out.println("Target name:"+targetName+" localFlag "+localFlag);
 		int option = JOptionPane.showConfirmDialog(null, targetName+" wanna recive the transmision!");
 		if(option == JOptionPane.OK_OPTION){SetKeyAgreement(localFlag);}
 		if(option == JOptionPane.NO_OPTION){}
@@ -194,14 +259,22 @@ public class ClientGUI extends JFrame implements ActionListener {
 	}
 	
 	public static void SetKeyAgreement(int flag) throws NotBoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException{
-		securityChooser.setEnabled(false);
-		destiChooser.setEnabled(false);
+		//securityChooser.setEnabled(false);
+		//destiChooser.setEnabled(false);
 		switch (flag) {
 
 		case 0:
-			//rsa = new Rsa();
-			//rsa.generateKey();
+		if(targetName == name){
+				
+			}
+			else{
+			String ipadd = MainAppGUI.getIpName();
+			client.Init(flag, name);
+			client.sendAgreementInfo(globalFlag,name,ipadd);
+			}
+			
 			break;
+			
 
 		case 1:
 			// df = new DiffieHellman();
@@ -281,12 +354,99 @@ public class ClientGUI extends JFrame implements ActionListener {
 		}
 
 		if (o == bencrypt) {
-
+			String msg = messageText.getText();
+			CipherText = Rsa.encrypt(msg, pubkey);
+			try {
+				client.sendMessage(ipadd, CipherText);
+			} catch (MalformedURLException | RemoteException
+					| NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			System.out.println("This is encrypted: "+ CipherText);
 			return;
 		}
 
 		if (o == bdecrypt) {
-
+			try {
+				PlainText = client.getMessage(ipadd);
+			} catch (MalformedURLException | RemoteException
+					| NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			ObjectInputStream inputStream = null;
+			try {
+				inputStream = new ObjectInputStream(new FileInputStream("keysrsa/"+name+"private.key"));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		    PrivateKey privateKey = null;
+			try {
+				privateKey = (PrivateKey) inputStream.readObject();
+			} catch (ClassNotFoundException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			msgFromClient = rsa.decrypt(PlainText, privateKey);
+			System.out.println("This representation: "+ PlainText);
+			System.out.println("This is decrypted: "+msgFromClient);
+			return;
+		}
+		
+		if (o == bgenkeys){
+			try {
+				genKeys();
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (MalformedURLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ServerNotActiveException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			return;
+		}
+		
+		if (o == bsendpubkey){
+			try {
+				client.sendPubKey(ipadd,globalFlag);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ClassNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		if (o == bgetpubkey){
+			try {
+				pubkey = client.getPubKey(ipadd);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			return;
 		}
 
@@ -294,8 +454,47 @@ public class ClientGUI extends JFrame implements ActionListener {
 			// String name = MainAppGUI.getClientName();
 			// String ipadd = MainAppGUI.getIpName();
 			// JOptionPane.showMessageDialog(null, name+":"+ipadd);
-
+			byte[] send = CipherText;
+			try {
+				client.sendMessage(ipadd, send);
+			} catch (MalformedURLException | RemoteException
+					| NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			System.out.println("This is sended to server: "+send);
 			return;
+			
+		}
+		
+		if (o == bgetlastmsg){
+			
+		
+			plainText.setText(msgFromClient);
+			return;
+		}
+		
+		if (o == bserverinfo){
+			System.out.print("Getted Transmition");
+			String ipadd = MainAppGUI.getIpName();
+			//targetName = client.getClientName(ipadd);
+			try {
+				targetName = client.getClientName(ipadd);
+				System.out.println(targetName);
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (MalformedURLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (NotBoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ServerNotActiveException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 		}
 
 		if (o == bok) {
