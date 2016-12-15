@@ -33,15 +33,11 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class MPSolver implements CBCEncryptable {
     
-    /**
-     * The MPCreator object (Alice), which creates the puzzles.
-     */
-    private final MPCreator mpc;
     
     /**
      * The filename for getting the puzzles.
      */
-    private final String puzzlesFile;
+    private String puzzlesFile;
     
     /**
      * Session key used for encrypting the communication.
@@ -52,16 +48,78 @@ public class MPSolver implements CBCEncryptable {
     /**
      * The name of the file holding the reply to Alice.
      */
-    public static final String PUBLIC_REPLY_FILE = "reply.puz";
+    private String replyFilename;
     
     
     /**
-     * Constructor with the given MPCreator object.
-     * @param mpc 
+     * The name of the cipher algorithm used for encrypting puzzles
      */
-    public MPSolver(MPCreator mpc) {
-        this.mpc = mpc;
-        puzzlesFile = MPCreator.PUZZLES_FILE;
+    private String puzzleAlgorithm;
+    
+    /**
+     * The name of the cipher algorithm used for deriving the key for encrypton. 
+     */
+    private String puzzleKeyAlgorithm;
+    
+    /*
+    
+    */
+    private IvParameterSpec iv;
+    
+    /**
+     * 
+     */
+    private int fragmentKeyLen;
+    
+    /**
+     * 
+     */
+    private int zerosKeyLen;
+    
+    /**
+     * Constructor with the given MPCreator object. 
+     */
+    public MPSolver() {
+        super();
+    }
+    
+    public MPSolver setReplyFilename(String replyFilename) {
+        this.replyFilename = replyFilename;
+        return this;
+    }
+    
+    public MPSolver setPuzzleFilename(String filename) {
+        this.puzzlesFile = filename;
+        return this;
+    }
+    
+    public MPSolver setPuzzleAlgorithm(String puzzleAlgorithm) {
+        this.puzzleAlgorithm = puzzleAlgorithm;
+        return this;
+    }
+    
+    public MPSolver setSecretKeyAlgorithm(String secretKeyAlgorithm) {
+        this.puzzleKeyAlgorithm = secretKeyAlgorithm;
+        return this;
+    }
+    
+    public MPSolver setIv(IvParameterSpec iv) {
+        this.iv = iv;
+        return this;
+    }
+    
+    public MPSolver setFragmentKeylen(int fragmentKeyLen) {
+        this.fragmentKeyLen = fragmentKeyLen;
+        return this;
+    }
+    
+    public MPSolver setZerosKeylen(int zerosLen) {
+        this.zerosKeyLen = zerosLen;
+        return this;
+    }
+    
+    public String getReplyFilename() {
+        return this.replyFilename;
     }
     
     /**
@@ -144,8 +202,8 @@ public class MPSolver implements CBCEncryptable {
             NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, 
             InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         
-        Cipher cipher = Cipher.getInstance(mpc.getPuzzleAlgorithm());
-        cipher.init(Cipher.DECRYPT_MODE, sk, mpc.getIv());
+        Cipher cipher = Cipher.getInstance(puzzleAlgorithm);
+        cipher.init(Cipher.DECRYPT_MODE, sk, iv);
         byte[] decipher = cipher.doFinal(puzzle);
         return decipher;
 
@@ -157,15 +215,14 @@ public class MPSolver implements CBCEncryptable {
      * @return the instance of SecretKey 
      */
     private SecretKey randomDecryptionKey() {
-        int fragmentLen = mpc.getFragmentLen();
-        int zerosLen = mpc.getZerosLen();
-        byte[] fragmentKey = new byte[fragmentLen];
+        
+        byte[] fragmentKey = new byte[fragmentKeyLen];
         SecureRandom random = new SecureRandom();
         random.nextBytes(fragmentKey);
         
-        byte[] key = new byte[fragmentLen + zerosLen];
-        System.arraycopy(fragmentKey, 0, key, 0, fragmentLen);
-        SecretKey sk = new SecretKeySpec(key, mpc.getPuzzleKeyAlgorithm());
+        byte[] key = new byte[fragmentKeyLen + zerosKeyLen];
+        System.arraycopy(fragmentKey, 0, key, 0, fragmentKeyLen);
+        SecretKey sk = new SecretKeySpec(key, puzzleKeyAlgorithm);
         return sk;
     }
     
@@ -176,7 +233,7 @@ public class MPSolver implements CBCEncryptable {
      */
     private boolean isPrefixOk(String line) {
         String prefix = line.substring(0, MPCreator.PREFIX.length());
-        System.out.println("Prefix = " + prefix);
+        //System.out.println("Prefix = " + prefix);
         return prefix
                 .equals(MPCreator.PREFIX);
     }
@@ -228,7 +285,7 @@ public class MPSolver implements CBCEncryptable {
     private void writePublicReply(String reply) {
         PrintWriter pw = null;
         try {
-            pw = new PrintWriter(new File(PUBLIC_REPLY_FILE));
+            pw = new PrintWriter(new File(replyFilename));
             pw.println(reply);
             pw.close();
         } catch (FileNotFoundException ex) {
@@ -285,11 +342,18 @@ public class MPSolver implements CBCEncryptable {
      */
     public static void main(String[] args) {
         try {
-            MPCreator mpbc = new MPCreator(10000, EnabledCiphers.AES_CBC);
-            mpbc.createPuzzles();
-            MPSolver mpbs = new MPSolver(mpbc);
+            MPCreator mpbc = new MPCreator(10000, EnabledCiphers.DES_CBC);
+            mpbc.createPuzzles("puzzle.puz");
+            MPSolver mpbs = new MPSolver()
+                    .setFragmentKeylen(mpbc.getFragmentLen())
+                    .setZerosKeylen(mpbc.getZerosLen())
+                    .setPuzzleAlgorithm(mpbc.getPuzzleAlgorithm())
+                    .setSecretKeyAlgorithm(mpbc.getPuzzleKeyAlgorithm())
+                    .setPuzzleFilename(mpbc.getPuzzleFileName())
+                    .setIv(mpbc.getIv())
+                    .setReplyFilename("reply.puz");
             mpbs.solvePuzzles();
-            mpbc.agreeOnKey(PUBLIC_REPLY_FILE);
+            mpbc.agreeOnKey(mpbs.getReplyFilename());
             
             String message = "hey, how are you, Joao. No I havent seen the Fast and furious,"
                     + "any episode actually. zamknij mordkę, chociaż wszystko się udało!";

@@ -120,7 +120,7 @@ public class ClientPD implements ChatClient {
         // Alicja chce teraz wysłać wiadomość.
         String message = "Bob, słyszysz mnie?";
         // Alicja generuje iv.
-        IvParameterSpec iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);
+        IvParameterSpec iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);  // do enkrypcji symetrycznej używamy AES128 i dlatego zawsze AES_BLOCK_SIZE
         // Alicja enkryptuje wiadomosc.
         byte[] encryption = Alice.encrypt(message, iv);
         // Alicja wpakowuje w strumień wiadomość oraz iv

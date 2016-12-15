@@ -87,10 +87,7 @@ public class MPCreator implements CBCEncryptable {
      */
     public static final String PREFIX = "Puzzle#";
     
-    /**
-     * The name of the file for storing the puzzles.
-     */
-    public static final String PUZZLES_FILE = "puzzles.puz";
+    
     
     // the object fields
     
@@ -140,10 +137,13 @@ public class MPCreator implements CBCEncryptable {
     /**
      * Iv to be created when encrypting the puzzles.
      */
-    public final IvParameterSpec iv;
+    private final IvParameterSpec iv;
     
+    /**
+     * 
+     */
+    private String puzzleFileName;
     
-
     
     /**
      * 
@@ -159,29 +159,35 @@ public class MPCreator implements CBCEncryptable {
         this.secureRandom = new SecureRandom();
         
         
-        if( puzzleAlgorithm.equals(EnabledCiphers.AES_CBC)) {
-            zerosLen = AES_ZEROS_LEN;
-            fragmentKeyLen = AES_KEY_FRAGMENT_LEN;
-            iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);
-            puzzleKeyAlgorithm = EnabledCiphers.AES;
-            
-        } else if ( puzzleAlgorithm.equals(EnabledCiphers.DES_CBC)) {
-            zerosLen = DES_ZEROS_LEN;
-            fragmentKeyLen = DES_KEY_FRAGMENT_LEN;
-            iv = IvGenerator.generateIV(IvGenerator.DES_BLOCK_SIZE);
-            puzzleKeyAlgorithm = EnabledCiphers.DES;
-        
-        } else if ( puzzleAlgorithm.equals(EnabledCiphers.DES_EDE_CBC)) {
-            zerosLen = DES_EDE_ZEROS_LEN;
-            fragmentKeyLen = DES_EDE_KEY_FRAGMENT_LEN;
-            iv = IvGenerator.generateIV(IvGenerator.DES_BLOCK_SIZE);
-            puzzleKeyAlgorithm = EnabledCiphers.DES_EDE;
-        
-        } else throw new NoSuchAlgorithmException("Algorithm is not one of AES, DES or DESede!"); 
+        switch (puzzleAlgorithm) {
+            case EnabledCiphers.AES_CBC:
+                zerosLen = AES_ZEROS_LEN;
+                fragmentKeyLen = AES_KEY_FRAGMENT_LEN;
+                iv = IvGenerator.generateIV(IvGenerator.AES_BLOCK_SIZE);
+                puzzleKeyAlgorithm = EnabledCiphers.AES;
+                break;
+            case EnabledCiphers.DES_CBC:
+                zerosLen = DES_ZEROS_LEN;
+                fragmentKeyLen = DES_KEY_FRAGMENT_LEN;
+                iv = IvGenerator.generateIV(IvGenerator.DES_BLOCK_SIZE);
+                puzzleKeyAlgorithm = EnabledCiphers.DES;
+                break;
+            case EnabledCiphers.DES_EDE_CBC:
+                zerosLen = DES_EDE_ZEROS_LEN;
+                fragmentKeyLen = DES_EDE_KEY_FRAGMENT_LEN;
+                iv = IvGenerator.generateIV(IvGenerator.DES_BLOCK_SIZE);
+                puzzleKeyAlgorithm = EnabledCiphers.DES_EDE;
+                break; 
+            default:
+                throw new NoSuchAlgorithmException("Algorithm is not one of AES, DES or DESede!");
+        }
     }
+    
+    public String getPuzzleFileName() { return puzzleFileName; }
     
     /**
      * Creates the puzzles and saves them in the file.
+     * @param filename
      * @throws java.io.FileNotFoundException
      * @throws java.security.NoSuchAlgorithmException
      * @throws javax.crypto.NoSuchPaddingException
@@ -191,8 +197,9 @@ public class MPCreator implements CBCEncryptable {
      * @throws java.io.UnsupportedEncodingException
      * @throws java.security.InvalidAlgorithmParameterException
      */
-    public void createPuzzles() throws FileNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
+    public void createPuzzles(String filename) throws FileNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
         
+        puzzleFileName = filename;
         File privatePuzzlesFile = new File(PRIVATE_PUZZLES_FILE);
         PrintWriter pw = new PrintWriter(privatePuzzlesFile);
         
@@ -203,7 +210,7 @@ public class MPCreator implements CBCEncryptable {
         }
         pw.close();
         
-        File puzzlesFile = new File(PUZZLES_FILE);
+        File puzzlesFile = new File(filename);
         PrintWriter pw2 = new PrintWriter(puzzlesFile);
         
         for(int i = 0; i < numberOfPuzzles; i++) {
@@ -288,45 +295,27 @@ public class MPCreator implements CBCEncryptable {
     }
     
  
+    @Override
     public byte[] encrypt(String plaintext, IvParameterSpec iv) {
         try {
             Cipher cipher = Cipher.getInstance(ENC_DEC_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, sessionKey, iv);
             byte[] encryption = cipher.doFinal(plaintext.getBytes());
             return encryption;
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
+    @Override
     public String decrypt(byte[] ciphertext, IvParameterSpec iv) {
         try {
             Cipher cipher = Cipher.getInstance(ENC_DEC_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, sessionKey, iv);
             byte[] decryption = cipher.doFinal(ciphertext);
             return new String(decryption);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException ex) {
             Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -336,7 +325,7 @@ public class MPCreator implements CBCEncryptable {
         
         try {
             MPCreator mpbc = new MPCreator(134, EnabledCiphers.DES_EDE_CBC);
-            mpbc.createPuzzles();
+            mpbc.createPuzzles("puzzle.puz");
             
         } catch (NoSuchPaddingException ex) {
             Logger.getLogger(MPCreator.class.getName()).log(Level.SEVERE, null, ex);
